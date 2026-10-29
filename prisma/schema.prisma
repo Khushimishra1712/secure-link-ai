@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  password      String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  scans         Scan[]
+  reports       Report[]
+  activities    ActivityLog[]
+}
+
+model Scan {
+  id            String    @id @default(cuid())
+  url           String
+  threatScore   Int
+  status        String    // Safe, Suspicious, Dangerous
+  analysis      Json      // Store detailed analysis
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id])
+  createdAt     DateTime  @default(now())
+  Report        Report[]
+}
+
+model Report {
+  id            String    @id @default(cuid())
+  reportUrl     String
+  scanId        String
+  scan          Scan      @relation(fields: [scanId], references: [id])
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  createdAt     DateTime  @default(now())
+}
+
+model ActivityLog {
+  id            String    @id @default(cuid())
+  action        String
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  createdAt     DateTime  @default(now())
+}
